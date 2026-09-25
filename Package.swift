@@ -24,7 +24,7 @@ let package = Package(
         .binaryTarget(
             name: "RaTeXFFI",
             url: "https://github.com/Interview-Pilot/RaTeX/releases/download/ip-apple-v0.1.14.2/RaTeX.xcframework.zip",
-            checksum: "eab29683e4e51d726b507dbd99659ea7c0704413f2eef16bb6e0b746f711d045"
+            checksum: "dd66b2b02ed6f1481e85cbd92e8d7bd0bdf904feeba30edcceea60a695a87e4c"
         ),
 
         // Swift wrapper: rendering, font loading, UIKit/AppKit/SwiftUI views.
