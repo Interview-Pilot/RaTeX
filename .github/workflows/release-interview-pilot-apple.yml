@@ -1,0 +1,78 @@
+name: Release Interview Pilot Apple XCFramework
+
+on:
+  push:
+    tags:
+      - 'ip-apple-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: >
+            aarch64-apple-ios,
+            aarch64-apple-ios-sim,
+            x86_64-apple-ios,
+            aarch64-apple-darwin,
+            x86_64-apple-darwin
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test hardened FFI
+        run: cargo test -p ratex-ffi
+
+      - name: Build XCFramework
+        run: bash scripts/build-apple-xcframework.sh
+
+      - name: Verify XCFramework platform slices
+        run: bash scripts/verify-xcframework-slices.sh platforms/ios/RaTeX.xcframework ios macos
+
+      - name: Package XCFramework
+        run: |
+          cd platforms/ios
+          ditto -c -k --sequesterRsrc --keepParent RaTeX.xcframework RaTeX.xcframework.zip
+          echo "CHECKSUM=$(swift package compute-checksum RaTeX.xcframework.zip)" >> "$GITHUB_ENV"
+
+      - name: Pin released binary checksum on the Apple branch
+        env:
+          APPLE_BRANCH: interview-pilot/apple-v0.1.14-safe
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          package = Path("Package.swift")
+          source = package.read_text()
+          updated, count = re.subn(
+              r'checksum: "[a-f0-9]+"',
+              f'checksum: "{os.environ["CHECKSUM"]}"',
+              source,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit("Package.swift checksum entry was not found exactly once")
+          package.write_text(updated)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Package.swift
+          if ! git diff --cached --quiet; then
+            git commit -m "Pin Interview Pilot Apple XCFramework checksum"
+            git push origin "HEAD:refs/heads/${APPLE_BRANCH}"
+          fi
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: platforms/ios/RaTeX.xcframework.zip

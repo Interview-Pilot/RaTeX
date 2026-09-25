@@ -48,7 +48,7 @@ if missing:
     print(f"::error::Missing XCFramework platform slices: {', '.join(missing)}")
     sys.exit(1)
 
-def matches(platform: str, variant: str | None = None):
+def matches(platform, variant=None):
     for lib in libs:
         if lib.get("SupportedPlatform") != platform:
             continue
