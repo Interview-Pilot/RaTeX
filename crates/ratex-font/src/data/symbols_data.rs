@@ -40,6 +40,7 @@ pub static SYMBOLS: &[SymbolEntry] = &[
     ("\\#", 1, 0, "textord", Some('#')),
     ("\\&", 0, 0, "textord", Some('&')),
     ("\\&", 1, 0, "textord", Some('&')),
+    ("&", 1, 0, "textord", Some('&')),
     ("\\aleph", 0, 0, "textord", Some('\u{2135}')),
     ("\\forall", 0, 0, "textord", Some('\u{2200}')),
     ("\\hbar", 0, 0, "textord", Some('\u{210F}')),

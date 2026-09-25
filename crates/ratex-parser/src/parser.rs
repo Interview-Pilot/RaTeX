@@ -154,7 +154,8 @@ impl<'a> Parser<'a> {
 
             let lex = self.fetch()?;
 
-            if END_OF_EXPRESSION.contains(&lex.text.as_str()) {
+            let is_text_ampersand = self.mode == Mode::Text && lex.text == "&";
+            if END_OF_EXPRESSION.contains(&lex.text.as_str()) && !is_text_ampersand {
                 break;
             }
             if let Some(break_text) = break_on_token_text {

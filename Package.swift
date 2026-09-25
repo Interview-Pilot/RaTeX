@@ -23,7 +23,7 @@ let package = Package(
         // In published releases this is replaced with a remote url + checksum target.
         .binaryTarget(
             name: "RaTeXFFI",
-            url: "https://github.com/Interview-Pilot/RaTeX/releases/download/ip-apple-v0.1.14.1/RaTeX.xcframework.zip",
+            url: "https://github.com/Interview-Pilot/RaTeX/releases/download/ip-apple-v0.1.14.2/RaTeX.xcframework.zip",
             checksum: "eab29683e4e51d726b507dbd99659ea7c0704413f2eef16bb6e0b746f711d045"
         ),
 

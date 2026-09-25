@@ -413,7 +413,7 @@ mod tests {
     #[test]
     fn interview_pilot_formula_corpus_renders_without_rewrites() {
         let formulas = [
-            r"\text{UFCF} = \text{EBIT}(1-\text{tax rate}) + \text{D\&A} - \text{CapEx} - \Delta \text{NWC}",
+            r"\text{UFCF} = \text{EBIT}(1-\text{tax rate}) + \text{D&A} - \text{CapEx} - \Delta \text{NWC}",
             r"\text{Present value of UFCF}_t = \frac{\text{UFCF}_t}{(1+\text{WACC})^t}",
             r"\text{Terminal value} = \frac{\text{UFCF}_{n+1}}{\text{WACC}-g}",
             r"\boxed{\begin{pmatrix}a&b\\c&d\end{pmatrix}}",
