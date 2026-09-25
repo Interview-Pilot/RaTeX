@@ -31,11 +31,11 @@ for RUST_TARGET in aarch64-linux-android armv7-linux-androideabi x86_64-linux-an
         cargo ndk \
             --target "$RUST_TARGET" \
             --manifest-path "$REPO_ROOT/Cargo.toml" \
-            build --release -p ratex-ffi
+            build --profile interview-pilot-android -p ratex-ffi
 
         DEST="$JNILIBS/$ABI"
         mkdir -p "$DEST"
-        cp "$REPO_ROOT/target/$RUST_TARGET/release/libratex_ffi.so" "$DEST/"
+        cp "$REPO_ROOT/target/$RUST_TARGET/interview-pilot-android/libratex_ffi.so" "$DEST/"
         echo "    ✓ $RUST_TARGET done"
     ) &
     PIDS+=($!)

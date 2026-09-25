@@ -32,6 +32,7 @@ pub mod jni;
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 use ratex_layout::{layout, to_display_list, LayoutOptions};
 use ratex_parser::parse;
@@ -57,6 +58,37 @@ fn clear_last_error() {
     LAST_ERROR.with(|cell| {
         *cell.borrow_mut() = None;
     });
+}
+
+fn panic_message(payload: Box<dyn std::any::Any + Send>) -> String {
+    if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string()
+    } else if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else {
+        "unknown panic payload".to_string()
+    }
+}
+
+fn error_result(message: &str) -> RatexResult {
+    set_last_error(message);
+    RatexResult {
+        data: std::ptr::null_mut(),
+        error_code: 1,
+    }
+}
+
+fn guard_result<F>(operation: F) -> RatexResult
+where
+    F: FnOnce() -> RatexResult,
+{
+    match catch_unwind(AssertUnwindSafe(operation)) {
+        Ok(result) => result,
+        Err(payload) => error_result(&format!(
+            "internal RaTeX renderer panic: {}",
+            panic_message(payload)
+        )),
+    }
 }
 
 /// Replace non-finite floats with 0 to produce valid JSON.
@@ -202,23 +234,22 @@ pub unsafe extern "C" fn ratex_parse_and_layout(
     latex: *const c_char,
     opts: *const RatexOptions,
 ) -> RatexResult {
-    let err_result = |msg: &str| -> RatexResult {
-        set_last_error(msg);
-        RatexResult {
-            data: std::ptr::null_mut(),
-            error_code: 1,
-        }
-    };
+    guard_result(|| unsafe { ratex_parse_and_layout_impl(latex, opts) })
+}
 
+unsafe fn ratex_parse_and_layout_impl(
+    latex: *const c_char,
+    opts: *const RatexOptions,
+) -> RatexResult {
     clear_last_error();
 
     if latex.is_null() {
-        return err_result("ratex_parse_and_layout: latex pointer is null");
+        return error_result("ratex_parse_and_layout: latex pointer is null");
     }
 
     let latex_str = match unsafe { CStr::from_ptr(latex) }.to_str() {
         Ok(s) => s,
-        Err(e) => return err_result(&format!("invalid UTF-8 in latex string: {e}")),
+        Err(e) => return error_result(&format!("invalid UTF-8 in latex string: {e}")),
     };
 
     let style = if opts.is_null() {
@@ -244,7 +275,7 @@ pub unsafe extern "C" fn ratex_parse_and_layout(
         if opts_ref.struct_size >= color_size && !opts_ref.color.is_null() {
             match validate_color(unsafe { *opts_ref.color }) {
                 Ok(color) => color,
-                Err(msg) => return err_result(&msg),
+                Err(msg) => return error_result(&msg),
             }
         } else {
             ratex_types::color::Color::BLACK
@@ -257,9 +288,9 @@ pub unsafe extern "C" fn ratex_parse_and_layout(
                 data: cs.into_raw(),
                 error_code: 0,
             },
-            Err(e) => err_result(&format!("JSON contains interior null byte: {e}")),
+            Err(e) => error_result(&format!("JSON contains interior null byte: {e}")),
         },
-        Err(e) => err_result(&e),
+        Err(e) => error_result(&e),
     }
 }
 
@@ -271,8 +302,16 @@ pub unsafe extern "C" fn ratex_parse_and_layout(
 /// `ptr` must have been returned by [`ratex_parse_and_layout`] and must not be freed twice.
 #[no_mangle]
 pub unsafe extern "C" fn ratex_free_display_list(ptr: *mut c_char) {
-    if !ptr.is_null() {
-        unsafe { drop(CString::from_raw(ptr)) };
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        if !ptr.is_null() {
+            unsafe { drop(CString::from_raw(ptr)) };
+        }
+    }));
+    if let Err(payload) = result {
+        set_last_error(&format!(
+            "internal RaTeX free panic: {}",
+            panic_message(payload)
+        ));
     }
 }
 
@@ -287,12 +326,15 @@ pub unsafe extern "C" fn ratex_free_display_list(ptr: *mut c_char) {
 /// next call to a layout function on this thread.
 #[no_mangle]
 pub extern "C" fn ratex_get_last_error() -> *const c_char {
-    LAST_ERROR.with(|cell| {
-        cell.borrow()
-            .as_ref()
-            .map(|cs| cs.as_ptr())
-            .unwrap_or(std::ptr::null())
-    })
+    catch_unwind(AssertUnwindSafe(|| {
+        LAST_ERROR.with(|cell| {
+            cell.borrow()
+                .as_ref()
+                .map(|cs| cs.as_ptr())
+                .unwrap_or(std::ptr::null())
+        })
+    }))
+    .unwrap_or(std::ptr::null())
 }
 
 #[cfg(test)]
@@ -369,6 +411,26 @@ mod tests {
     }
 
     #[test]
+    fn interview_pilot_formula_corpus_renders_without_rewrites() {
+        let formulas = [
+            r"\text{UFCF} = \text{EBIT}(1-\text{tax rate}) + \text{D\&A} - \text{CapEx} - \Delta \text{NWC}",
+            r"\text{Present value of UFCF}_t = \frac{\text{UFCF}_t}{(1+\text{WACC})^t}",
+            r"\text{Terminal value} = \frac{\text{UFCF}_{n+1}}{\text{WACC}-g}",
+            r"\boxed{\begin{pmatrix}a&b\\c&d\end{pmatrix}}",
+            r"\operatorname{rank}(A)",
+            r"\operatorname*{arg max}_{x} f(x)",
+            r"\sum_{\substack{i=1\\j=2}} x_{ij}",
+            r"\left\{x\middle|x>0\right\}",
+        ];
+
+        for formula in formulas {
+            let json = call(formula, 1)
+                .unwrap_or_else(|| panic!("Interview Pilot formula failed: {formula}"));
+            assert!(json.contains("items"), "missing display items: {formula}");
+        }
+    }
+
+    #[test]
     fn null_latex_returns_error() {
         let black = RatexColor::BLACK;
         let opts = RatexOptions {
@@ -397,6 +459,19 @@ mod tests {
     #[test]
     fn free_null_is_noop() {
         unsafe { ratex_free_display_list(std::ptr::null_mut()) };
+    }
+
+    #[test]
+    fn ffi_guard_converts_panics_to_errors() {
+        let result = guard_result(|| panic!("deliberate test panic"));
+        assert_ne!(result.error_code, 0);
+        assert!(result.data.is_null());
+
+        let err = ratex_get_last_error();
+        assert!(!err.is_null());
+        let message = unsafe { CStr::from_ptr(err) }.to_str().unwrap();
+        assert!(message.contains("internal RaTeX renderer panic"));
+        assert!(message.contains("deliberate test panic"));
     }
 
     #[test]

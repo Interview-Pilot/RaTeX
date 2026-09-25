@@ -9,8 +9,12 @@ use jni::objects::{JClass, JFloatArray, JString};
 use jni::sys::{jboolean, jobject, jstring, JNI_TRUE};
 use jni::JNIEnv;
 
-use crate::{ratex_get_last_error, ratex_parse_and_layout, RatexColor, RatexOptions};
+use crate::{
+    panic_message, ratex_get_last_error, ratex_parse_and_layout, set_last_error, RatexColor,
+    RatexOptions,
+};
 use std::ffi::CString;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 /// JNI entry point for `RaTeXEngine.nativeParseAndLayout(latex: String, displayMode: Boolean, rgba: FloatArray): String?`
 ///
@@ -23,6 +27,25 @@ use std::ffi::CString;
 pub extern "system" fn Java_io_ratex_RaTeXEngine_nativeParseAndLayout(
     mut env: JNIEnv,
     _class: JClass,
+    latex: JString,
+    display_mode: jboolean,
+    rgba: JFloatArray,
+) -> jobject {
+    match catch_unwind(AssertUnwindSafe(|| {
+        native_parse_and_layout(&mut env, latex, display_mode, rgba)
+    })) {
+        Ok(result) => result,
+        Err(payload) => {
+            let message = format!("internal RaTeX JNI panic: {}", panic_message(payload));
+            set_last_error(&message);
+            let _ = env.throw_new("java/lang/RuntimeException", message);
+            std::ptr::null_mut()
+        }
+    }
+}
+
+fn native_parse_and_layout(
+    env: &mut JNIEnv,
     latex: JString,
     display_mode: jboolean,
     rgba: JFloatArray,
@@ -119,9 +142,21 @@ pub extern "system" fn Java_io_ratex_RaTeXEngine_nativeParseAndLayout(
 /// Returns the last error message as a Java `String`, or `null` if no error.
 #[no_mangle]
 pub extern "system" fn Java_io_ratex_RaTeXEngine_nativeGetLastError(
-    env: JNIEnv,
+    mut env: JNIEnv,
     _class: JClass,
 ) -> jstring {
+    match catch_unwind(AssertUnwindSafe(|| native_get_last_error(&mut env))) {
+        Ok(result) => result,
+        Err(payload) => {
+            let message = format!("internal RaTeX JNI panic: {}", panic_message(payload));
+            set_last_error(&message);
+            let _ = env.throw_new("java/lang/RuntimeException", message);
+            std::ptr::null_mut()
+        }
+    }
+}
+
+fn native_get_last_error(env: &mut JNIEnv) -> jstring {
     let ptr = ratex_get_last_error();
     if ptr.is_null() {
         return std::ptr::null_mut();

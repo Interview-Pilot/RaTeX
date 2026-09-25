@@ -50,3 +50,10 @@ lto = true            # Full cross-crate link-time optimization, eliminates dead
 codegen-units = 1     # Single codegen unit for maximum optimization
 panic = "abort"       # Remove unwinding machinery (gimli, addr2line, miniz_oxide, regex_lite)
 strip = "symbols"     # Strip all symbol tables from output binaries
+
+# Interview Pilot embeds RaTeX inside the Android app process. Keep the normal
+# upstream release profile unchanged, but use unwinding for that mobile boundary
+# so the FFI guards can convert an internal panic into a recoverable render error.
+[profile.interview-pilot-android]
+inherits = "release"
+panic = "unwind"
