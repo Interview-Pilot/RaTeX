@@ -21,3 +21,6 @@ optimizations while enabling panic unwinding so the C and JNI guards can turn
 internal renderer panics into normal errors instead of terminating the host
 application. Do not build the Interview Pilot AAR with the upstream `release`
 profile, which intentionally uses `panic = "abort"`.
+
+The script builds `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` so the AAR
+matches the Android application's complete ABI set.
