@@ -1,7 +1,7 @@
 /**
  * ratex.h — RaTeX C ABI public header
  *
- * Provides LaTeX-to-DisplayList rendering for iOS, Android, Flutter, and React Native.
+ * Provides LaTeX-to-DisplayList rendering for iOS, Android, Windows, Flutter, and React Native.
  *
  * Usage:
  *   RatexColor black = {0, 0, 0, 1};

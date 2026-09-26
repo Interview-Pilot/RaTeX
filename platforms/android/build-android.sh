@@ -3,10 +3,10 @@
 #
 # Prerequisites:
 #   cargo install cargo-ndk
-#   rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+#   rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 #   NDK installed (set ANDROID_NDK_HOME or let cargo-ndk auto-detect)
 #
-# Output: platforms/android/src/main/jniLibs/{arm64-v8a,armeabi-v7a,x86_64}/libratex_ffi.so
+# Output: platforms/android/src/main/jniLibs/{arm64-v8a,armeabi-v7a,x86,x86_64}/libratex_ffi.so
 
 set -eo pipefail
 
@@ -17,6 +17,7 @@ abi_for() {
     case "$1" in
         aarch64-linux-android)  echo "arm64-v8a" ;;
         armv7-linux-androideabi) echo "armeabi-v7a" ;;
+        i686-linux-android)     echo "x86" ;;
         x86_64-linux-android)   echo "x86_64" ;;
         *) echo "unknown target: $1" >&2; exit 1 ;;
     esac
@@ -24,18 +25,18 @@ abi_for() {
 
 echo "==> Building ratex-ffi for Android targets (parallel)..."
 PIDS=()
-for RUST_TARGET in aarch64-linux-android armv7-linux-androideabi x86_64-linux-android; do
+for RUST_TARGET in aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android; do
     ABI="$(abi_for "$RUST_TARGET")"
     echo "    → $RUST_TARGET ($ABI) [starting]"
     (
         cargo ndk \
             --target "$RUST_TARGET" \
             --manifest-path "$REPO_ROOT/Cargo.toml" \
-            build --release -p ratex-ffi
+            build --profile interview-pilot-android -p ratex-ffi
 
         DEST="$JNILIBS/$ABI"
         mkdir -p "$DEST"
-        cp "$REPO_ROOT/target/$RUST_TARGET/release/libratex_ffi.so" "$DEST/"
+        cp "$REPO_ROOT/target/$RUST_TARGET/interview-pilot-android/libratex_ffi.so" "$DEST/"
         echo "    ✓ $RUST_TARGET done"
     ) &
     PIDS+=($!)

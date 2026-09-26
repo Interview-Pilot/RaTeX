@@ -7,6 +7,7 @@ Each platform wraps this library with a thin native layer:
 
 - **iOS** — Swift Package + CoreGraphics renderer
 - **Android** — JNI + Kotlin + Android Canvas renderer
+- **Windows**: C ABI + C# + Win2D / GDI+ renderer
 - **Flutter** — Dart FFI + CustomPainter renderer
 - **Web** — WebAssembly + Canvas 2D renderer (TypeScript)
 - **React Native** — Native module wrapping iOS/Android views
@@ -16,6 +17,7 @@ RaTeX 通过 `ratex-ffi` crate 对外暴露一个 C ABI 静态/动态库。
 
 - **iOS** — Swift Package + CoreGraphics 渲染
 - **Android** — JNI + Kotlin + Android Canvas 渲染
+- **Windows**: C ABI + C# + Win2D / GDI+ 渲染
 - **Flutter** — Dart FFI + CustomPainter 渲染
 - **Web** — WebAssembly + Canvas 2D 渲染（TypeScript）
 - **React Native** — 封装 iOS/Android 原生视图的 Native Module
@@ -70,6 +72,8 @@ LaTeX string  (UTF-8)
 | `aarch64-linux-android` | `libratex_ffi.so` | Android arm64-v8a |
 | `armv7-linux-androideabi` | `libratex_ffi.so` | Android armeabi-v7a |
 | `x86_64-linux-android` | `libratex_ffi.so` | Android x86_64 |
+| `x86_64-pc-windows-msvc` | `ratex_ffi.dll` | Windows x64 |
+| `aarch64-pc-windows-msvc` | `ratex_ffi.dll` | Windows ARM64 |
 
 ---
 
@@ -148,6 +152,14 @@ All commands use internally-tagged JSON: `"type"` is a field alongside the coord
 - `RaTeXRenderer` draws onto `android.graphics.Canvas` using `android.graphics.Path`.
 - `RaTeXEngine.parse` is a `suspend` function; runs on `Dispatchers.Default`.
 
+### Windows
+
+- The managed binding loads `ratex_ffi.dll` through the stable C ABI.
+- `RaTeXWin2DRenderer` draws directly on WinUI-owned Win2D surfaces.
+- `RaTeXGdiRenderer` draws the same DisplayList directly into existing native overlay render passes.
+- KaTeX fonts and the matching x64 or ARM64 native runtime are copied with the managed project.
+- Interview Pilot release builds use the `interview-pilot-windows` Cargo profile so the FFI panic guard can return a render error instead of terminating the host process.
+
 ### Flutter
 
 - iOS: library is loaded via `DynamicLibrary.process()` (statically linked).
@@ -168,6 +180,9 @@ bash scripts/build-apple-xcframework.sh
 
 # Android (produces jniLibs/*.so)
 bash platforms/android/build-android.sh
+
+# Windows (produces x64 and ARM64 ratex_ffi.dll runtime assets)
+powershell -File platforms/windows/build-windows.ps1
 
 # Verify Rust
 cargo build --release -p ratex-ffi

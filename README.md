@@ -7,7 +7,7 @@
 One Rust core, one display list, every platform renders natively.
 
 ```
-\frac{-b \pm \sqrt{b^2-4ac}}{2a}   →   iOS · Android · Flutter · React Native · Web · PNG · SVG · PDF
+\frac{-b \pm \sqrt{b^2-4ac}}{2a}   →   iOS · Android · Windows · Flutter · React Native · Web · PNG · SVG · PDF
 ```
 
 **[→ Live Demo](https://erweixin.github.io/RaTeX/demo/live.html)** — type LaTeX and compare RaTeX vs KaTeX side-by-side ·
@@ -25,7 +25,7 @@ RaTeX is the same KaTeX-compatible math engine compiled to a portable Rust core,
 | | KaTeX | MathJax | **RaTeX** |
 |---|---|---|---|
 | Runtime | JS (V8) | JS (V8) | **Pure Rust** |
-| Surfaces it runs on | Web only* | Web only* | **iOS · Android · Flutter · RN · Web · server · SVG · PDF** |
+| Surfaces it runs on | Web only* | Web only* | **iOS · Android · Windows · Flutter · RN · Web · server · SVG · PDF** |
 | Mobile | WebView wrapper | WebView wrapper | **Native** |
 | Server-side rendering | headless Chrome | mathjax-node | **Single binary, no JS runtime** |
 | Output substrate | DOM (`<span>` tree) | DOM / SVG | **Display list → Canvas / PNG / SVG / PDF** |
@@ -86,6 +86,7 @@ These are the **command-level** gaps vs KaTeX (including `trust`-style HTML). Ty
 |---|---|---|
 | **iOS** | XCFramework + Swift / CoreGraphics | Out of the box |
 | **Android** | JNI + Kotlin + Canvas · AAR | Out of the box |
+| **Windows** | C ABI + C# + Win2D / GDI+ | Out of the box |
 | **Flutter** | Dart FFI + `CustomPainter` | Out of the box |
 | **React Native** | Native module + C ABI · iOS/Android views | Out of the box |
 | **Compose Multiplatform** | Kotlin Multiplatform + Compose Canvas · Android / iOS / JVM Desktop | Via [`RaTeX-CMP`](https://github.com/darriousliu/RaTeX-CMP) |
@@ -136,7 +137,7 @@ flowchart LR
         D[ratex-layout]
         E[DisplayList]
     end
-    F[ratex-ffi\niOS · Android · Flutter · RN]
+    F[ratex-ffi\niOS · Android · Windows · Flutter · RN]
     G[ratex-wasm\nWeb / Canvas 2D]
     H[ratex-render\nPNG · tiny-skia]
     I[ratex-svg\nSVG]
@@ -284,6 +285,7 @@ See [`platforms/web/README.md`](platforms/web/README.md) for the full setup.
 |---|---|
 | iOS | [`platforms/ios/README.md`](platforms/ios/README.md) |
 | Android | [`platforms/android/README.md`](platforms/android/README.md) |
+| Windows | [`platforms/windows/README.md`](platforms/windows/README.md) |
 | GTK4 (Linux) | [`platforms/gtk/README.md`](platforms/gtk/README.md) |
 | Flutter | [`platforms/flutter/README.md`](platforms/flutter/README.md) |
 | React Native | [`platforms/react-native/README.md`](platforms/react-native/README.md) |

@@ -577,6 +577,17 @@ mod accents_and_fonts {
             assert!(!body.is_empty());
         }
     }
+
+    #[test]
+    fn text_function_accepts_literal_ampersand() {
+        let ast = parse("\\text{D&A}").unwrap();
+        assert_eq!(ast.len(), 1);
+        if let ParseNode::Text { body, .. } = &ast[0] {
+            assert_eq!(body.len(), 3);
+        } else {
+            panic!("expected text node");
+        }
+    }
 }
 
 #[cfg(test)]
