@@ -21,7 +21,6 @@ RaTeX/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                # Build + Clippy + Test
-│       ├── pages.yml             # GitHub Pages (demo)
 │       └── release-*.yml         # crates.io, npm, pub.dev, iOS/Android/RN
 │
 ├── crates/                       # Rust crates
