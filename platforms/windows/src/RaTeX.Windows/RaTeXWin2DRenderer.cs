@@ -211,8 +211,8 @@ public sealed class RaTeXWin2DRenderer
 
     private static float Em(double value, float fontSize) => checked((float)value * fontSize);
 
-    private static Windows.UI.Color ToWindowsColor(RaTeXColor color) =>
-        Windows.UI.Color.FromArgb(
+    private static global::Windows.UI.Color ToWindowsColor(RaTeXColor color) =>
+        global::Windows.UI.Color.FromArgb(
             ToByte(color.A),
             ToByte(color.R),
             ToByte(color.G),
