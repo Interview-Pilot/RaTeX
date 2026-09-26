@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
+using Microsoft.UI.Text;
 using Windows.UI.Text;
 
 namespace RaTeX.Windows;
