@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <UseWinUI>true</UseWinUI>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <PackageId>RaTeX.Windows</PackageId>
+    <Version>0.1.14</Version>
+    <Authors>RaTeX Contributors</Authors>
+    <Description>Native Windows rendering for RaTeX using Win2D and GDI+.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Interview-Pilot/RaTeX</RepositoryUrl>
+    <RaTeXNativeRuntime Condition="'$(RuntimeIdentifier)' == 'win-arm64' or '$(PlatformTarget)' == 'ARM64'">win-arm64</RaTeXNativeRuntime>
+    <RaTeXNativeRuntime Condition="'$(RaTeXNativeRuntime)' == ''">win-x64</RaTeXNativeRuntime>
+    <RaTeXNativeLibrary>$(MSBuildProjectDirectory)/runtimes/$(RaTeXNativeRuntime)/native/ratex_ffi.dll</RaTeXNativeLibrary>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.5.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+    <InternalsVisibleTo Include="RaTeX.Windows.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../../../../fonts/KaTeX_*.ttf"
+             Link="RaTeX/Fonts/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest"
+             Pack="true"
+             PackagePath="contentFiles/any/any/RaTeX/Fonts"
+             PackageCopyToOutput="true" />
+    <None Include="../../../../LICENSE"
+          Pack="true"
+          PackagePath="" />
+    <None Include="../../../../licenses/KaTeX-fonts-NOTICE.txt"
+          Pack="true"
+          PackagePath="licenses" />
+    <None Include="../../../../licenses/SIL-OFL-1.1.txt"
+          Pack="true"
+          PackagePath="licenses" />
+    <None Update="runtimes/win-x64/native/ratex_ffi.dll"
+          Condition="Exists('runtimes/win-x64/native/ratex_ffi.dll')"
+          Pack="true"
+          PackagePath="runtimes/win-x64/native" />
+    <None Update="runtimes/win-arm64/native/ratex_ffi.dll"
+          Condition="Exists('runtimes/win-arm64/native/ratex_ffi.dll')"
+          Pack="true"
+          PackagePath="runtimes/win-arm64/native" />
+    <Content Include="$(RaTeXNativeLibrary)"
+             Link="ratex_ffi.dll"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="ValidateRaTeXNativeLibrary" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(RaTeXNativeLibrary)')"
+           Text="Missing $(RaTeXNativeLibrary). Run platforms/windows/build-windows.ps1 for the requested architecture." />
+  </Target>
+</Project>

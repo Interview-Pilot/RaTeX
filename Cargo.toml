@@ -57,3 +57,10 @@ strip = "symbols"     # Strip all symbol tables from output binaries
 [profile.interview-pilot-android]
 inherits = "release"
 panic = "unwind"
+
+# Interview Pilot embeds RaTeX inside the Windows app process. Preserve the
+# release optimizations while allowing the FFI guard to convert Rust panics
+# into recoverable render failures rather than terminating the app.
+[profile.interview-pilot-windows]
+inherits = "release"
+panic = "unwind"

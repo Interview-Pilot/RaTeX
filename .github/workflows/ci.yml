@@ -70,6 +70,21 @@ jobs:
           npm ci
           npm test
 
+  windows-binding:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc,aarch64-pc-windows-msvc
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: Swatinem/rust-cache@v2
+      - name: Build native runtimes and test the Windows binding
+        shell: pwsh
+        run: ./platforms/windows/build-windows.ps1
+
   gtk-gobject-smoke:
     runs-on: ubuntu-latest
     steps:

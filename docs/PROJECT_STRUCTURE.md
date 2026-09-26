@@ -194,7 +194,7 @@ crates/ratex-font/
 
 ## ratex-ffi
 
-Exports a C ABI used by iOS (static lib / XCFramework), Android (JNI), Flutter (Dart FFI), and React Native (native module). Main entry: parse LaTeX and return a heap-allocated JSON `DisplayList` string; callers free with `ratex_free_display_list`. On failure, use `ratex_get_last_error`. See crate-level docs in `crates/ratex-ffi/src/lib.rs`.
+Exports a C ABI used by iOS (static lib / XCFramework), Android (JNI), Windows (DLL), Flutter (Dart FFI), and React Native (native module). Main entry: parse LaTeX and return a heap-allocated JSON `DisplayList` string; callers free with `ratex_free_display_list`. On failure, use `ratex_get_last_error`. See crate-level docs in `crates/ratex-ffi/src/lib.rs`.
 
 ---
 
@@ -289,7 +289,7 @@ ratex-layout
     ├── ratex-svg     ├── ratex-unicode-font (CJK fallback loader)
     └── ratex-pdf     ┘    (PDF)
     ↑
-platforms/ (ios, android, flutter, react-native, web)
+platforms/ (ios, android, windows, flutter, react-native, web)
 ```
 
 `platforms/gtk` contains the Linux desktop GObject package metadata for the `RatexGtk-1.0` namespace: the public C header, GIR file, Vala VAPI, pkg-config template, and C/Python/Vala smoke examples. The implementation lives in `crates/ratex-gtk4`.
